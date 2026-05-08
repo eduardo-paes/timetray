@@ -17,15 +17,21 @@ fn main() {
         // Menu clicks are handled here in Rust so they work even when the window is hidden.
         // The JS action callbacks on MenuItem are unreliable when WebView2 is throttled.
         .on_menu_event(|app, event| {
-            let id = event.id.0.as_str();
+            let id: &str = event.id.as_ref();
             if let Some(task_id) = id.strip_prefix("task:") {
                 let _ = app.emit("tray:switch-task", task_id.to_string());
-            } else if id == "tray:stop" {
-                let _ = app.emit("tray:stop", ());
-            } else if id == "tray:show" {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
+            } else {
+                match id {
+                    "tray:stop" => {
+                        let _ = app.emit("tray:stop", ());
+                    }
+                    "tray:show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    _ => {}
                 }
             }
         })
