@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{tray::TrayIconBuilder, Manager, RunEvent, WindowEvent};
+use tauri::{tray::TrayIconBuilder, Emitter, Manager, RunEvent, WindowEvent};
 
 fn main() {
     let app = tauri::Builder::default()
@@ -12,13 +12,28 @@ fn main() {
                 .tooltip("TimeTray — Click to switch tasks")
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
-                    // "Open Dashboard" is handled here in Rust because calling
-                    // getCurrentWindow().show() from a JS action callback is unreliable
-                    // when the window is hidden. All other items use JS action callbacks.
-                    if event.id.as_ref() == "tray:show" {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
+                    let id: &str = event.id.as_ref();
+                    println!("[TimeTray] menu click: '{id}'");
+
+                    if let Some(task_id) = id.strip_prefix("task:") {
+                        println!("[TimeTray] emitting tray:switch-task -> {task_id}");
+                        let _ = app.emit("tray:switch-task", task_id.to_string());
+                    } else {
+                        match id {
+                            "tray:stop" => {
+                                println!("[TimeTray] emitting tray:stop");
+                                let _ = app.emit("tray:stop", ());
+                            }
+                            "tray:show" => {
+                                println!("[TimeTray] showing window");
+                                if let Some(window) = app.get_webview_window("main") {
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                }
+                            }
+                            other => {
+                                println!("[TimeTray] unhandled menu id: '{other}'");
+                            }
                         }
                     }
                 })

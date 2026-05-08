@@ -4,15 +4,10 @@ import { Task } from '../../domain/task/Task'
 import { WorkSession, elapsedSeconds } from '../../domain/session/WorkSession'
 import { formatDurationShort } from '../../shared/utils'
 
-export type OnTaskSwitch = (taskId: string) => Promise<void>
-export type OnStop = () => Promise<void>
-
 export class TrayAdapter {
   private tray: TrayIcon | null = null
   private refreshInterval: ReturnType<typeof setInterval> | null = null
 
-  // Cached menu item references — reused across 1s ticks to avoid replacing
-  // the native menu handle (which dismisses an open menu on Windows).
   private taskItems = new Map<string, MenuItem>()
   private stopItem: MenuItem | null = null
   private builtTaskIds: string[] = []
@@ -56,14 +51,8 @@ export class TrayAdapter {
     }
   }
 
-  // Full rebuild: recreates the native menu with fresh action callbacks.
-  // Only called when the enabled task list changes — NOT every second.
-  private async fullRebuild(
-    tasks: Task[],
-    activeSession: WorkSession | null,
-    onSwitch: OnTaskSwitch,
-    onStop: OnStop,
-  ): Promise<void> {
+  // Full rebuild: recreates the native menu. Only when task list changes.
+  private async fullRebuild(tasks: Task[], activeSession: WorkSession | null): Promise<void> {
     this.taskItems.clear()
     const taskMenuItems: MenuItem[] = []
 
@@ -73,7 +62,6 @@ export class TrayAdapter {
         id: `task:${task.id}`,
         text: this.taskLabel(task, isActive, activeSession),
         enabled: !isActive,
-        action: () => onSwitch(task.id),
       })
       this.taskItems.set(task.id, item)
       taskMenuItems.push(item)
@@ -83,7 +71,6 @@ export class TrayAdapter {
       id: 'tray:stop',
       text: activeSession ? 'Stop Tracking' : 'No Active Task',
       enabled: !!activeSession,
-      action: () => onStop(),
     })
 
     const menu = await Menu.new({
@@ -92,8 +79,6 @@ export class TrayAdapter {
         await PredefinedMenuItem.new({ item: 'Separator' }),
         this.stopItem,
         await PredefinedMenuItem.new({ item: 'Separator' }),
-        // "Open Dashboard" is handled in Rust (on_menu_event) — more reliable
-        // than calling getCurrentWindow().show() from a hidden-window JS context.
         await MenuItem.new({ id: 'tray:show', text: 'Open Dashboard' }),
         await PredefinedMenuItem.new({ item: 'Quit' }),
       ],
@@ -104,8 +89,8 @@ export class TrayAdapter {
     await this.updateTooltip(tasks, activeSession)
   }
 
-  // Light update: changes text/enabled on existing items without touching
-  // the native menu handle — an open menu is never dismissed by the 1s tick.
+  // Light update: setText/setEnabled on cached items — does NOT call setMenu(),
+  // so an open tray menu is never dismissed by the 1-second tick.
   private async updateItems(tasks: Task[], activeSession: WorkSession | null): Promise<void> {
     for (const task of tasks) {
       const item = this.taskItems.get(task.id)
@@ -121,19 +106,14 @@ export class TrayAdapter {
     await this.updateTooltip(tasks, activeSession)
   }
 
-  async rebuild(
-    tasks: Task[],
-    activeSession: WorkSession | null,
-    onSwitch: OnTaskSwitch,
-    onStop: OnStop,
-  ): Promise<void> {
+  async rebuild(tasks: Task[], activeSession: WorkSession | null): Promise<void> {
     try {
       const enabled = tasks.filter((t) => t.enabled)
       const ids = enabled.map((t) => t.id)
       const needsFull = ids.join('\0') !== this.builtTaskIds.join('\0')
 
       if (needsFull) {
-        await this.fullRebuild(enabled, activeSession, onSwitch, onStop)
+        await this.fullRebuild(enabled, activeSession)
         this.builtTaskIds = ids
       } else {
         await this.updateItems(enabled, activeSession)
@@ -143,15 +123,11 @@ export class TrayAdapter {
     }
   }
 
-  startRefreshLoop(
-    getState: () => { tasks: Task[]; activeSession: WorkSession | null },
-    onSwitch: OnTaskSwitch,
-    onStop: OnStop,
-  ): void {
+  startRefreshLoop(getState: () => { tasks: Task[]; activeSession: WorkSession | null }): void {
     if (this.refreshInterval) return
     this.refreshInterval = setInterval(async () => {
       const { tasks, activeSession } = getState()
-      await this.rebuild(tasks, activeSession, onSwitch, onStop)
+      await this.rebuild(tasks, activeSession)
     }, 1000)
   }
 
