@@ -2,9 +2,18 @@ import React, { useState } from 'react'
 import { Task } from '../../../domain/task/Task'
 
 const PRESET_COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e',
-  '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899',
-  '#6b7280', '#a855f7', '#f43f5e', '#0ea5e9',
+  '#ef4444',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#14b8a6',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#6b7280',
+  '#a855f7',
+  '#f43f5e',
+  '#0ea5e9',
 ]
 
 interface Props {
@@ -21,8 +30,14 @@ export function TaskForm({ initial, onSave, onCancel }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) { setError('Task name is required'); return }
-    if (name.length > 40) { setError('Max 40 characters'); return }
+    if (!name.trim()) {
+      setError('Task name is required')
+      return
+    }
+    if (name.length > 40) {
+      setError('Max 40 characters')
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -38,9 +53,7 @@ export function TaskForm({ initial, onSave, onCancel }: Props) {
       onSubmit={handleSubmit}
       className="space-y-4 p-5 bg-gray-800 rounded-xl border border-gray-700"
     >
-      <h3 className="text-sm font-semibold text-gray-200">
-        {initial ? 'Edit Task' : 'New Task'}
-      </h3>
+      <h3 className="text-sm font-semibold text-gray-200">{initial ? 'Edit Task' : 'New Task'}</h3>
 
       <div>
         <label className="block text-xs text-gray-400 mb-1">Task Name</label>

@@ -5,6 +5,7 @@ import { trayAdapter } from '../../infrastructure/tray/TrayAdapter'
 
 const ServicesContext = createContext<AppServices | null>(null)
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useServices(): AppServices {
   const ctx = useContext(ServicesContext)
   if (!ctx) throw new Error('useServices must be used within AppProvider')
@@ -19,7 +20,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (initDone.current) return
     initDone.current = true
-
     ;(async () => {
       try {
         store.setLoading(true)
@@ -58,7 +58,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             activeSession: useAppStore.getState().activeSession,
           }),
           makeCallbacks().onSwitch,
-          makeCallbacks().onStop
+          makeCallbacks().onStop,
         )
       } catch (e) {
         store.setError(String(e))
@@ -71,6 +71,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       trayAdapter.stopRefreshLoop()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (!services) {
@@ -84,9 +85,5 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  return (
-    <ServicesContext.Provider value={services}>
-      {children}
-    </ServicesContext.Provider>
-  )
+  return <ServicesContext.Provider value={services}>{children}</ServicesContext.Provider>
 }

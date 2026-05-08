@@ -13,11 +13,29 @@ interface Props {
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
 
-export function Calendar({ year, month, days, selectedDate, onSelectDate, onPrevMonth, onNextMonth }: Props) {
+export function Calendar({
+  year,
+  month,
+  days,
+  selectedDate,
+  onSelectDate,
+  onPrevMonth,
+  onNextMonth,
+}: Props) {
   const dayMap = new Map(days.map((d) => [d.date, d]))
   const firstDayOfWeek = new Date(year, month - 1, 1).getDay()
   const offset = (firstDayOfWeek + 6) % 7
@@ -70,11 +88,12 @@ export function Calendar({ year, month, days, selectedDate, onSelectDate, onPrev
               onClick={() => onSelectDate(dateStr)}
               className={`
                 relative aspect-square flex items-center justify-center text-xs rounded transition-colors
-                ${isSelected
-                  ? 'bg-blue-600 text-white font-semibold'
-                  : isToday
-                  ? 'border border-blue-500/60 text-blue-300'
-                  : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                ${
+                  isSelected
+                    ? 'bg-blue-600 text-white font-semibold'
+                    : isToday
+                      ? 'border border-blue-500/60 text-blue-300'
+                      : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
                 }
               `}
             >

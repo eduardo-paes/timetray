@@ -50,11 +50,12 @@ function TaskListItem({
       className={`
         group flex items-center gap-2 px-3 py-2 rounded-lg
         transition-colors select-none
-        ${task.enabled
-          ? isActive
-            ? 'bg-blue-600/20 border border-blue-500/30 text-blue-300 cursor-default'
-            : 'hover:bg-gray-800 text-gray-300 border border-transparent cursor-pointer'
-          : 'opacity-40 text-gray-500 border border-transparent cursor-not-allowed'
+        ${
+          task.enabled
+            ? isActive
+              ? 'bg-blue-600/20 border border-blue-500/30 text-blue-300 cursor-default'
+              : 'hover:bg-gray-800 text-gray-300 border border-transparent cursor-pointer'
+            : 'opacity-40 text-gray-500 border border-transparent cursor-not-allowed'
         }
       `}
       onClick={() => task.enabled && !isActive && onSwitch()}
@@ -65,14 +66,15 @@ function TaskListItem({
       />
       <span className="flex-1 text-sm font-medium truncate">{task.name}</span>
 
-      {isActive && (
-        <span className="text-[10px] text-blue-400 font-mono animate-pulse">▶</span>
-      )}
+      {isActive && <span className="text-[10px] text-blue-400 font-mono animate-pulse">▶</span>}
 
       <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           className="text-gray-500 hover:text-gray-300 px-1 py-0.5 rounded text-xs"
-          onClick={(e) => { e.stopPropagation(); setShowMenu((v) => !v) }}
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowMenu((v) => !v)
+          }}
         >
           ⋯
         </button>
@@ -83,20 +85,32 @@ function TaskListItem({
           >
             <button
               className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700"
-              onClick={(e) => { e.stopPropagation(); setShowMenu(false); onEdit() }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMenu(false)
+                onEdit()
+              }}
             >
               Edit
             </button>
             <button
               className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700"
-              onClick={(e) => { e.stopPropagation(); setShowMenu(false); onToggle() }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMenu(false)
+                onToggle()
+              }}
             >
               {task.enabled ? 'Disable' : 'Enable'}
             </button>
             {!isActive && (
               <button
                 className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700"
-                onClick={(e) => { e.stopPropagation(); setShowMenu(false); onDelete() }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  onDelete()
+                }}
               >
                 Delete
               </button>

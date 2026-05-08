@@ -13,14 +13,11 @@ export class SessionService {
 
     await db.execute('BEGIN IMMEDIATE')
     try {
-      await db.execute(
-        "UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL",
-        [now]
-      )
+      await db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [now])
       await db.execute(
         `INSERT INTO sessions (id, task_id, started_at, ended_at, source, created_at)
          VALUES (?, ?, ?, NULL, ?, ?)`,
-        [newId, taskId, now, source, now]
+        [newId, taskId, now, source, now],
       )
       await db.execute('COMMIT')
     } catch (e) {
@@ -33,10 +30,7 @@ export class SessionService {
 
   async stopTracking(): Promise<void> {
     const db = await getDb()
-    await db.execute(
-      "UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL",
-      [nowIso()]
-    )
+    await db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [nowIso()])
   }
 
   async getActiveSession(): Promise<WorkSession | null> {
@@ -55,7 +49,7 @@ export class SessionService {
     const db = await getDb()
     const result = await db.execute(
       "UPDATE sessions SET ended_at = ?, source = 'crash_recovery' WHERE ended_at IS NULL AND started_at < ?",
-      [appStartTime, appStartTime]
+      [appStartTime, appStartTime],
     )
     return result.rowsAffected
   }

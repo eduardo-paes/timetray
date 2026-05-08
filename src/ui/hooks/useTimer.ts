@@ -4,21 +4,14 @@ import { elapsedSeconds } from '../../domain/session/WorkSession'
 
 export function useTimer(): number {
   const activeSession = useAppStore((s) => s.activeSession)
-  const [elapsed, setElapsed] = useState(
-    activeSession ? elapsedSeconds(activeSession) : 0
-  )
+  const [, tick] = useState(0)
 
   useEffect(() => {
-    if (!activeSession) {
-      setElapsed(0)
-      return
-    }
-    setElapsed(elapsedSeconds(activeSession))
-    const interval = setInterval(() => {
-      setElapsed(elapsedSeconds(activeSession))
-    }, 1000)
+    if (!activeSession) return
+    const interval = setInterval(() => tick((n) => n + 1), 1000)
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSession?.id])
 
-  return elapsed
+  return activeSession ? elapsedSeconds(activeSession) : 0
 }

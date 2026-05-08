@@ -2,11 +2,11 @@ import { TaskRepository } from '../../infrastructure/persistence/TaskRepository'
 import { Task } from '../../domain/task/Task'
 
 const SEED_TASKS = [
-  { name: 'PR Review',      color: '#3b82f6' },
-  { name: 'Meeting',        color: '#ef4444' },
-  { name: 'Jira Ticket',   color: '#eab308' },
-  { name: 'Ticket Review',  color: '#22c55e' },
-  { name: 'Break',          color: '#6b7280' },
+  { name: 'PR Review', color: '#3b82f6' },
+  { name: 'Meeting', color: '#ef4444' },
+  { name: 'Jira Ticket', color: '#eab308' },
+  { name: 'Ticket Review', color: '#22c55e' },
+  { name: 'Break', color: '#6b7280' },
 ]
 
 export class TaskService {
@@ -36,7 +36,7 @@ export class TaskService {
 
   async updateTask(
     id: string,
-    data: Partial<Pick<Task, 'name' | 'color' | 'hotkey' | 'enabled' | 'taskOrder'>>
+    data: Partial<Pick<Task, 'name' | 'color' | 'hotkey' | 'enabled' | 'taskOrder'>>,
   ): Promise<Task> {
     if (data.name !== undefined) {
       if (!data.name.trim()) throw new Error('Task name cannot be empty')

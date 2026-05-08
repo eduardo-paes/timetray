@@ -63,17 +63,16 @@ async function runMigrations(db: Database): Promise<void> {
   `)
 
   const rows = await db.select<Array<{ version: number }>>(
-    'SELECT COALESCE(MAX(version), 0) as version FROM schema_version'
+    'SELECT COALESCE(MAX(version), 0) as version FROM schema_version',
   )
   let currentVersion = rows[0]?.version ?? 0
 
   for (const migration of MIGRATIONS) {
     if (migration.version > currentVersion) {
       await db.execute(migration.sql)
-      await db.execute(
-        'INSERT OR REPLACE INTO schema_version (version) VALUES (?)',
-        [migration.version]
-      )
+      await db.execute('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [
+        migration.version,
+      ])
       currentVersion = migration.version
     }
   }

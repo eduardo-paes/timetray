@@ -76,8 +76,7 @@ export const useAppStore = create<AppState>((set) => ({
   setCalendarDays: (days) => set({ calendarDays: days }),
 
   settings: {},
-  setSetting: (key, value) =>
-    set((s) => ({ settings: { ...s.settings, [key]: value } })),
+  setSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),
 
   isLoading: false,
   setLoading: (loading) => set({ isLoading: loading }),

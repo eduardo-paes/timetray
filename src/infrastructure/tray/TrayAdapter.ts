@@ -34,7 +34,7 @@ export class TrayAdapter {
     tasks: Task[],
     activeSession: WorkSession | null,
     onSwitch: OnTaskSwitch,
-    onStop: OnStop
+    onStop: OnStop,
   ): Promise<void> {
     try {
       const enabledTasks = tasks.filter((t) => t.enabled)
@@ -54,7 +54,7 @@ export class TrayAdapter {
               await onSwitch(task.id)
             },
           })
-        })
+        }),
       )
 
       const sep1 = await PredefinedMenuItem.new({ item: 'Separator' })
@@ -90,7 +90,7 @@ export class TrayAdapter {
           const activeTask = tasks.find((t) => t.id === activeSession.taskId)
           const elapsed = elapsedSeconds(activeSession)
           await tray.setTooltip(
-            `TimeTray — ${activeTask?.name ?? 'Tracking'} ${formatDurationShort(elapsed)}`
+            `TimeTray — ${activeTask?.name ?? 'Tracking'} ${formatDurationShort(elapsed)}`,
           )
         } else {
           await tray.setTooltip('TimeTray — No active task')
@@ -104,7 +104,7 @@ export class TrayAdapter {
   startRefreshLoop(
     getState: () => { tasks: Task[]; activeSession: WorkSession | null },
     onSwitch: OnTaskSwitch,
-    onStop: OnStop
+    onStop: OnStop,
   ): void {
     if (this.refreshInterval) return
     this.refreshInterval = setInterval(async () => {

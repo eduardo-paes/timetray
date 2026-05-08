@@ -44,11 +44,13 @@ export function DashboardLayout() {
   useEffect(() => {
     if (!store.isReady) return
     loadDayData(store.selectedDate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.selectedDate, store.isReady])
 
   useEffect(() => {
     if (!store.isReady) return
     loadCalendar(store.viewedMonth.year, store.viewedMonth.month)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.viewedMonth.year, store.viewedMonth.month, store.isReady])
 
   // Reload today when active session changes (new session started)
@@ -58,6 +60,7 @@ export function DashboardLayout() {
     if (store.selectedDate === today) {
       loadDayData(today)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.activeSession?.id])
 
   async function handleSwitchTask(taskId: string) {
@@ -165,30 +168,33 @@ export function DashboardLayout() {
 
         {/* Task switch buttons */}
         <div className="px-8 py-4 flex gap-2 flex-wrap border-b border-gray-800/40 flex-shrink-0">
-          {store.tasks.filter((t) => t.enabled).map((task) => {
-            const isActive = task.id === store.activeSession?.taskId
-            return (
-              <button
-                key={task.id}
-                onClick={() => !isActive && handleSwitchTask(task.id)}
-                disabled={isActive}
-                className={`
+          {store.tasks
+            .filter((t) => t.enabled)
+            .map((task) => {
+              const isActive = task.id === store.activeSession?.taskId
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => !isActive && handleSwitchTask(task.id)}
+                  disabled={isActive}
+                  className={`
                   flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors
-                  ${isActive
-                    ? 'bg-blue-600/20 border border-blue-500/40 text-blue-300 cursor-default'
-                    : 'bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600 cursor-pointer'
+                  ${
+                    isActive
+                      ? 'bg-blue-600/20 border border-blue-500/40 text-blue-300 cursor-default'
+                      : 'bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600 cursor-pointer'
                   }
                 `}
-              >
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: task.color ?? '#6b7280' }}
-                />
-                {task.name}
-                {isActive && <span className="text-[10px] text-blue-400 animate-pulse">▶</span>}
-              </button>
-            )
-          })}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: task.color ?? '#6b7280' }}
+                  />
+                  {task.name}
+                  {isActive && <span className="text-[10px] text-blue-400 animate-pulse">▶</span>}
+                </button>
+              )
+            })}
         </div>
 
         <div className="flex-1 flex items-center justify-center text-gray-700 text-sm">
