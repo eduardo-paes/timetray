@@ -5,6 +5,10 @@ let _db: Database | null = null
 export async function getDb(): Promise<Database> {
   if (_db) return _db
   _db = await Database.load('sqlite:timetray.db')
+  // WAL mode: readers don't block writers and writers don't block readers.
+  // busy_timeout: retry for up to 5 s instead of failing immediately with SQLITE_BUSY.
+  await _db.execute('PRAGMA journal_mode=WAL')
+  await _db.execute('PRAGMA busy_timeout=5000')
   await runMigrations(_db)
   return _db
 }
