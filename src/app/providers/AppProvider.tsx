@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { listen } from '@tauri-apps/api/event'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { initializeApp, AppServices } from '../bootstrap/init'
 import { useAppStore } from '../store/appStore'
 import { trayAdapter } from '../../infrastructure/tray/TrayAdapter'
@@ -39,8 +39,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         store.setReady(true)
         setServices(svc)
 
-        // Tray clicks are routed from Rust on_menu_event → Tauri emit → these listeners.
-        const unlistenSwitch = await listen<string>('tray:switch-task', async (event) => {
+        // Tray clicks: Rust on_menu_event → window.emit() → window-targeted listeners.
+        // Must use getCurrentWebviewWindow().listen(), not global listen(), because
+        // WebviewWindow::emit() from Rust targets the specific window (not EventTarget::Any).
+        const appWindow = getCurrentWebviewWindow()
+        const unlistenSwitch = await appWindow.listen<string>('tray:switch-task', async (event) => {
           console.log('[TimeTray] tray:switch-task received:', event.payload)
           try {
             const session = await svc.sessionService.switchToTask(event.payload, 'tray')
@@ -51,7 +54,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         })
 
-        const unlistenStop = await listen('tray:stop', async () => {
+        const unlistenStop = await appWindow.listen('tray:stop', async () => {
           console.log('[TimeTray] tray:stop received')
           try {
             await svc.sessionService.stopTracking()
