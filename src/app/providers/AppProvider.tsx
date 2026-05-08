@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { listen } from '@tauri-apps/api/event'
 import { initializeApp, AppServices } from '../bootstrap/init'
 import { useAppStore } from '../store/appStore'
 import { trayAdapter } from '../../infrastructure/tray/TrayAdapter'
@@ -21,9 +20,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (initDone.current) return
     initDone.current = true
-
-    const cleanups: Array<() => void> = []
-
     ;(async () => {
       try {
         store.setLoading(true)
@@ -39,34 +35,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         store.setReady(true)
         setServices(svc)
 
-        // Tray event listeners — menu clicks are routed from Rust via on_menu_event,
-        // then arrive here as Tauri events. This works even when the window is hidden.
-        const unlistenSwitch = await listen<string>('tray:switch-task', async (event) => {
-          try {
-            const session = await svc.sessionService.switchToTask(event.payload, 'tray')
-            useAppStore.getState().setActiveSession(session)
-          } catch (e) {
-            console.error('[TimeTray] tray switch failed:', e)
-          }
-        })
+        const onSwitch = async (taskId: string) => {
+          const session = await svc.sessionService.switchToTask(taskId, 'tray')
+          useAppStore.getState().setActiveSession(session)
+        }
 
-        const unlistenStop = await listen('tray:stop', async () => {
-          try {
-            await svc.sessionService.stopTracking()
-            useAppStore.getState().setActiveSession(null)
-          } catch (e) {
-            console.error('[TimeTray] tray stop failed:', e)
-          }
-        })
-
-        cleanups.push(unlistenSwitch, unlistenStop)
+        const onStop = async () => {
+          await svc.sessionService.stopTracking()
+          useAppStore.getState().setActiveSession(null)
+        }
 
         await trayAdapter.init()
-        await trayAdapter.rebuild(tasks, activeSession)
-        trayAdapter.startRefreshLoop(() => ({
-          tasks: useAppStore.getState().tasks,
-          activeSession: useAppStore.getState().activeSession,
-        }))
+        await trayAdapter.rebuild(tasks, activeSession, onSwitch, onStop)
+        trayAdapter.startRefreshLoop(
+          () => ({
+            tasks: useAppStore.getState().tasks,
+            activeSession: useAppStore.getState().activeSession,
+          }),
+          onSwitch,
+          onStop,
+        )
       } catch (e) {
         store.setError(String(e))
         console.error('[TimeTray] Init failed:', e)
@@ -77,7 +65,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       trayAdapter.stopRefreshLoop()
-      cleanups.forEach((fn) => fn())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
