@@ -1,10 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, RunEvent, WindowEvent,
-};
+use tauri::{tray::TrayIconBuilder, RunEvent, WindowEvent};
 
 fn main() {
     let app = tauri::Builder::default()
@@ -12,21 +9,8 @@ fn main() {
         .setup(|app| {
             TrayIconBuilder::with_id("timetray-main")
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("TimeTray — Click to open")
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button: MouseButton::Left,
-                        button_state: MouseButtonState::Up,
-                        ..
-                    } = event
-                    {
-                        let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    }
-                })
+                .tooltip("TimeTray — Click to switch tasks")
+                .show_menu_on_left_click(true)
                 .build(app)?;
             Ok(())
         })
