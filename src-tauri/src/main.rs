@@ -15,24 +15,27 @@ fn main() {
                     let id: &str = event.id.as_ref();
                     println!("[TimeTray] menu click: '{id}'");
 
+                    let Some(window) = app.get_webview_window("main") else {
+                        println!("[TimeTray] ERROR: main window not found");
+                        return;
+                    };
+
                     if let Some(task_id) = id.strip_prefix("task:") {
-                        println!("[TimeTray] emitting tray:switch-task -> {task_id}");
-                        let _ = app.emit("tray:switch-task", task_id.to_string());
+                        println!("[TimeTray] window.emit tray:switch-task -> {task_id}");
+                        let _ = window.emit("tray:switch-task", task_id.to_string());
                     } else {
                         match id {
                             "tray:stop" => {
-                                println!("[TimeTray] emitting tray:stop");
-                                let _ = app.emit("tray:stop", ());
+                                println!("[TimeTray] window.emit tray:stop");
+                                let _ = window.emit("tray:stop", ());
                             }
                             "tray:show" => {
                                 println!("[TimeTray] showing window");
-                                if let Some(window) = app.get_webview_window("main") {
-                                    let _ = window.show();
-                                    let _ = window.set_focus();
-                                }
+                                let _ = window.show();
+                                let _ = window.set_focus();
                             }
                             other => {
-                                println!("[TimeTray] unhandled menu id: '{other}'");
+                                println!("[TimeTray] unhandled: '{other}'");
                             }
                         }
                     }
