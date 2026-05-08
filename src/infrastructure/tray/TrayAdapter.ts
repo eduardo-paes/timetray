@@ -1,12 +1,8 @@
 import { TrayIcon } from '@tauri-apps/api/tray'
 import { Menu, MenuItem, PredefinedMenuItem } from '@tauri-apps/api/menu'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { Task } from '../../domain/task/Task'
 import { WorkSession, elapsedSeconds } from '../../domain/session/WorkSession'
 import { formatDurationShort } from '../../shared/utils'
-
-export type OnTaskSwitch = (taskId: string) => Promise<void>
-export type OnStop = () => Promise<void>
 
 export class TrayAdapter {
   private tray: TrayIcon | null = null
@@ -30,12 +26,9 @@ export class TrayAdapter {
     return this.tray
   }
 
-  async rebuild(
-    tasks: Task[],
-    activeSession: WorkSession | null,
-    onSwitch: OnTaskSwitch,
-    onStop: OnStop,
-  ): Promise<void> {
+  // Menu item clicks are routed via Rust's on_menu_event → Tauri events → AppProvider listeners.
+  // Do NOT use the `action` callback on MenuItem — it is unreliable when the window is hidden.
+  async rebuild(tasks: Task[], activeSession: WorkSession | null): Promise<void> {
     try {
       const enabledTasks = tasks.filter((t) => t.enabled)
 
@@ -48,11 +41,9 @@ export class TrayAdapter {
           const label = `${prefix}${task.name}${timer}`
 
           return MenuItem.new({
+            id: `task:${task.id}`,
             text: label,
             enabled: !isActive,
-            action: async () => {
-              await onSwitch(task.id)
-            },
           })
         }),
       )
@@ -61,20 +52,14 @@ export class TrayAdapter {
       const sep2 = await PredefinedMenuItem.new({ item: 'Separator' })
 
       const stopItem = await MenuItem.new({
+        id: 'tray:stop',
         text: activeSession ? 'Stop Tracking' : 'No Active Task',
         enabled: !!activeSession,
-        action: async () => {
-          await onStop()
-        },
       })
 
       const showItem = await MenuItem.new({
+        id: 'tray:show',
         text: 'Open Dashboard',
-        action: async () => {
-          const win = getCurrentWindow()
-          await win.show()
-          await win.setFocus()
-        },
       })
 
       const quitItem = await PredefinedMenuItem.new({ item: 'Quit' })
@@ -101,15 +86,11 @@ export class TrayAdapter {
     }
   }
 
-  startRefreshLoop(
-    getState: () => { tasks: Task[]; activeSession: WorkSession | null },
-    onSwitch: OnTaskSwitch,
-    onStop: OnStop,
-  ): void {
+  startRefreshLoop(getState: () => { tasks: Task[]; activeSession: WorkSession | null }): void {
     if (this.refreshInterval) return
     this.refreshInterval = setInterval(async () => {
       const { tasks, activeSession } = getState()
-      await this.rebuild(tasks, activeSession, onSwitch, onStop)
+      await this.rebuild(tasks, activeSession)
     }, 1000)
   }
 
