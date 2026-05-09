@@ -8,6 +8,7 @@ import { useTimer } from '../../hooks/useTimer'
 import { formatDuration, todayString } from '../../../shared/utils'
 import { Task } from '../../../domain/task/Task'
 import { HistoryService } from '../../../application/services/HistoryService'
+import { DayOverview } from '../../components/DayOverview/DayOverview'
 import { SessionRepository } from '../../../infrastructure/persistence/SessionRepository'
 import { getDb } from '../../../infrastructure/db/database'
 
@@ -197,9 +198,7 @@ export function DashboardLayout() {
             })}
         </div>
 
-        <div className="flex-1 flex items-center justify-center text-gray-700 text-sm">
-          <p>Select a day in the calendar or switch tasks above.</p>
-        </div>
+        <DayOverview summary={store.daySummary} />
       </main>
 
       {/* Right sidebar */}
