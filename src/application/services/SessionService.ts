@@ -1,29 +1,16 @@
 import { SessionRepository } from '../../infrastructure/persistence/SessionRepository'
 import { WorkSession, SessionSource } from '../../domain/session/WorkSession'
-import { getDb } from '../../infrastructure/db/database'
-import { generateId, nowIso, todayString } from '../../shared/utils'
+import { todayString } from '../../shared/utils'
 
 export class SessionService {
   constructor(private sessionRepo: SessionRepository) {}
 
   async switchToTask(taskId: string, source: SessionSource = 'tray'): Promise<WorkSession> {
-    const db = await getDb()
-    const now = nowIso()
-    const newId = generateId()
-
-    await db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [now])
-    await db.execute(
-      `INSERT INTO sessions (id, task_id, started_at, ended_at, source, created_at)
-       VALUES (?, ?, ?, NULL, ?, ?)`,
-      [newId, taskId, now, source, now],
-    )
-
-    return (await this.sessionRepo.findById(newId))!
+    return this.sessionRepo.switchToTask(taskId, source)
   }
 
   async stopTracking(): Promise<void> {
-    const db = await getDb()
-    await db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [nowIso()])
+    this.sessionRepo.endAll()
   }
 
   async getActiveSession(): Promise<WorkSession | null> {
@@ -39,11 +26,6 @@ export class SessionService {
   }
 
   async recoverCrashedSessions(appStartTime: string): Promise<number> {
-    const db = await getDb()
-    const result = await db.execute(
-      "UPDATE sessions SET ended_at = ?, source = 'crash_recovery' WHERE ended_at IS NULL AND started_at < ?",
-      [appStartTime, appStartTime],
-    )
-    return result.rowsAffected
+    return this.sessionRepo.recoverCrashedSessions(appStartTime)
   }
 }

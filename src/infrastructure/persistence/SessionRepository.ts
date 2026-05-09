@@ -37,6 +37,20 @@ export class SessionRepository {
     return rows.map(rowToSession)
   }
 
+  async switchToTask(taskId: string, source: WorkSession['source']): Promise<WorkSession> {
+    const now = nowIso()
+    const newId = generateId()
+
+    await this.db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [now])
+    await this.db.execute(
+      `INSERT INTO sessions (id, task_id, started_at, ended_at, source, created_at)
+       VALUES (?, ?, ?, NULL, ?, ?)`,
+      [newId, taskId, now, source, now],
+    )
+
+    return (await this.findById(newId))!
+  }
+
   async start(taskId: string, source: WorkSession['source']): Promise<WorkSession> {
     const now = nowIso()
     const id = generateId()
@@ -51,5 +65,17 @@ export class SessionRepository {
   async end(sessionId: string): Promise<WorkSession> {
     await this.db.execute('UPDATE sessions SET ended_at = ? WHERE id = ?', [nowIso(), sessionId])
     return (await this.findById(sessionId))!
+  }
+
+  async endAll(): Promise<void> {
+    await this.db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [nowIso()])
+  }
+
+  async recoverCrashedSessions(appStartTime: string): Promise<number> {
+    const result = await this.db.execute(
+      "UPDATE sessions SET ended_at = ?, source = 'crash_recovery' WHERE ended_at IS NULL AND started_at < ?",
+      [appStartTime, appStartTime],
+    )
+    return result.rowsAffected
   }
 }
