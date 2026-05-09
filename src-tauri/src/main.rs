@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{tray::TrayIconBuilder, Emitter, Manager, RunEvent, WindowEvent};
+use tauri::{tray::TrayIconBuilder, Manager, RunEvent, WindowEvent};
 
 fn main() {
     let app = tauri::Builder::default()
@@ -12,31 +12,10 @@ fn main() {
                 .tooltip("TimeTray — Click to switch tasks")
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
-                    let id: &str = event.id.as_ref();
-                    println!("[TimeTray] menu click: '{id}'");
-
-                    let Some(window) = app.get_webview_window("main") else {
-                        println!("[TimeTray] ERROR: main window not found");
-                        return;
-                    };
-
-                    if let Some(task_id) = id.strip_prefix("task:") {
-                        println!("[TimeTray] window.emit tray:switch-task -> {task_id}");
-                        let _ = window.emit("tray:switch-task", task_id.to_string());
-                    } else {
-                        match id {
-                            "tray:stop" => {
-                                println!("[TimeTray] window.emit tray:stop");
-                                let _ = window.emit("tray:stop", ());
-                            }
-                            "tray:show" => {
-                                println!("[TimeTray] showing window");
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                            other => {
-                                println!("[TimeTray] unhandled: '{other}'");
-                            }
+                    if event.id.as_ref() == "tray:show" {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
                         }
                     }
                 })

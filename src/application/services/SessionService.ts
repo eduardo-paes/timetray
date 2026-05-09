@@ -11,19 +11,12 @@ export class SessionService {
     const now = nowIso()
     const newId = generateId()
 
-    await db.execute('BEGIN IMMEDIATE')
-    try {
-      await db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [now])
-      await db.execute(
-        `INSERT INTO sessions (id, task_id, started_at, ended_at, source, created_at)
-         VALUES (?, ?, ?, NULL, ?, ?)`,
-        [newId, taskId, now, source, now],
-      )
-      await db.execute('COMMIT')
-    } catch (e) {
-      await db.execute('ROLLBACK')
-      throw e
-    }
+    await db.execute('UPDATE sessions SET ended_at = ? WHERE ended_at IS NULL', [now])
+    await db.execute(
+      `INSERT INTO sessions (id, task_id, started_at, ended_at, source, created_at)
+       VALUES (?, ?, ?, NULL, ?, ?)`,
+      [newId, taskId, now, source, now],
+    )
 
     return (await this.sessionRepo.findById(newId))!
   }

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { initializeApp, AppServices } from '../bootstrap/init'
 import { useAppStore } from '../store/appStore'
 import { trayAdapter } from '../../infrastructure/tray/TrayAdapter'
@@ -22,8 +21,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (initDone.current) return
     initDone.current = true
 
-    const cleanups: Array<() => void> = []
-
     ;(async () => {
       try {
         store.setLoading(true)
@@ -39,33 +36,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         store.setReady(true)
         setServices(svc)
 
-        // Tray clicks: Rust on_menu_event → window.emit() → window-targeted listeners.
-        // Must use getCurrentWebviewWindow().listen(), not global listen(), because
-        // WebviewWindow::emit() from Rust targets the specific window (not EventTarget::Any).
-        const appWindow = getCurrentWebviewWindow()
-        const unlistenSwitch = await appWindow.listen<string>('tray:switch-task', async (event) => {
-          console.log('[TimeTray] tray:switch-task received:', event.payload)
-          try {
-            const session = await svc.sessionService.switchToTask(event.payload, 'tray')
-            useAppStore.getState().setActiveSession(session)
-            console.log('[TimeTray] switched to task', event.payload)
-          } catch (e) {
-            console.error('[TimeTray] switchToTask failed:', e)
-          }
-        })
-
-        const unlistenStop = await appWindow.listen('tray:stop', async () => {
-          console.log('[TimeTray] tray:stop received')
-          try {
-            await svc.sessionService.stopTracking()
-            useAppStore.getState().setActiveSession(null)
-          } catch (e) {
-            console.error('[TimeTray] stopTracking failed:', e)
-          }
-        })
-
-        cleanups.push(unlistenSwitch, unlistenStop)
-        console.log('[TimeTray] tray event listeners registered')
+        trayAdapter.setHandlers(
+          async (taskId: string) => {
+            try {
+              const session = await svc.sessionService.switchToTask(taskId, 'tray')
+              useAppStore.getState().setActiveSession(session)
+            } catch (e) {
+              console.error('[TimeTray] switchToTask failed:', e)
+            }
+          },
+          async () => {
+            try {
+              await svc.sessionService.stopTracking()
+              useAppStore.getState().setActiveSession(null)
+            } catch (e) {
+              console.error('[TimeTray] stopTracking failed:', e)
+            }
+          },
+        )
 
         await trayAdapter.init()
         await trayAdapter.rebuild(tasks, activeSession)
@@ -82,8 +70,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })()
 
     return () => {
+      initDone.current = false
       trayAdapter.stopRefreshLoop()
-      cleanups.forEach((fn) => fn())
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

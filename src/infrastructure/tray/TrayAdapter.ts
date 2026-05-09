@@ -12,6 +12,17 @@ export class TrayAdapter {
   private stopItem: MenuItem | null = null
   private builtTaskIds: string[] = []
 
+  private onTaskClick?: (taskId: string) => void | Promise<void>
+  private onStop?: () => void | Promise<void>
+
+  setHandlers(
+    onTaskClick: (taskId: string) => void | Promise<void>,
+    onStop: () => void | Promise<void>,
+  ): void {
+    this.onTaskClick = onTaskClick
+    this.onStop = onStop
+  }
+
   async init(): Promise<void> {
     try {
       this.tray = await TrayIcon.getById('timetray-main')
@@ -58,10 +69,12 @@ export class TrayAdapter {
 
     for (const task of tasks) {
       const isActive = activeSession?.taskId === task.id
+      const taskId = task.id
       const item = await MenuItem.new({
-        id: `task:${task.id}`,
+        id: `task:${taskId}`,
         text: this.taskLabel(task, isActive, activeSession),
         enabled: !isActive,
+        action: () => { void this.onTaskClick?.(taskId) },
       })
       this.taskItems.set(task.id, item)
       taskMenuItems.push(item)
@@ -71,6 +84,7 @@ export class TrayAdapter {
       id: 'tray:stop',
       text: activeSession ? 'Stop Tracking' : 'No Active Task',
       enabled: !!activeSession,
+      action: () => { void this.onStop?.() },
     })
 
     const menu = await Menu.new({
