@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path * -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(xargs grep *)",
+      "Bash(node *)",
+      "Bash(Find *)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(npm install *)",
+      "Bash(npx tauri *)"
+    ]
+  }
+}

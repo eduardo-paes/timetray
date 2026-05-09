@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="196" fill="#0A0908"/>
+
+  <!-- Track ring (dark guide) -->
+  <circle cx="512" cy="512" r="310" fill="none" stroke="#1D1A17" stroke-width="76"/>
+
+  <!-- Progress arc: 270° clockwise from 12 o'clock to 9 o'clock -->
+  <!-- Start: (512, 202) = top    End: (202, 512) = left -->
+  <path
+    d="M 512 202 A 310 310 0 1 1 202 512"
+    fill="none"
+    stroke="#C87A2B"
+    stroke-width="64"
+    stroke-linecap="round"
+  />
+
+  <!-- Live indicator dot at arc end (9 o'clock position) -->
+  <circle cx="202" cy="512" r="52" fill="#E89A47"/>
+
+  <!-- Subtle inner glow ring around indicator -->
+  <circle cx="202" cy="512" r="72" fill="none" stroke="#E89A47" stroke-width="8" opacity="0.25"/>
+
+  <!-- Center hub -->
+  <circle cx="512" cy="512" r="32" fill="#2A241F"/>
+  <circle cx="512" cy="512" r="16" fill="#9E5D1F"/>
+</svg>

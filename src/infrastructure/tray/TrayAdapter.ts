@@ -72,6 +72,38 @@ function exitIcon(): Uint8Array {
   }))
 }
 
+// Copper arc icon — matches the app's Obsidian+Copper identity.
+// 270° arc clockwise from 12→9 o'clock with a bright end-dot.
+let _appTrayIcon: Uint8Array | undefined
+function appTrayIcon(): Uint8Array {
+  return (_appTrayIcon ??= pngBytes((ctx, s) => {
+    const cx = s / 2
+    const r = s / 2 - 1.5
+    const sw = Math.max(2, s * 0.19)
+
+    // Dark track
+    ctx.beginPath()
+    ctx.arc(cx, cx, r, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)'
+    ctx.lineWidth = sw
+    ctx.stroke()
+
+    // Copper arc: 270° CW from 12 o'clock (−π/2) to 9 o'clock (π)
+    ctx.beginPath()
+    ctx.arc(cx, cx, r, -Math.PI / 2, Math.PI, false)
+    ctx.strokeStyle = '#C87A2B'
+    ctx.lineWidth = sw
+    ctx.lineCap = 'round'
+    ctx.stroke()
+
+    // Bright indicator dot at 9 o'clock (end of arc)
+    ctx.beginPath()
+    ctx.arc(cx - r, cx, sw * 0.62, 0, Math.PI * 2)
+    ctx.fillStyle = '#E89A47'
+    ctx.fill()
+  }, 32))
+}
+
 // --- TrayAdapter ---
 
 export class TrayAdapter {
@@ -96,6 +128,7 @@ export class TrayAdapter {
   async init(): Promise<void> {
     try {
       this.tray = await TrayIcon.getById('timetray-main')
+      await this.tray.setIcon(appTrayIcon())
     } catch {
       // will retry on first rebuild
     }
