@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{tray::TrayIconBuilder, Manager, RunEvent, WindowEvent};
+use tauri::{tray::TrayIconBuilder, Manager, WindowEvent};
 
 fn main() {
     let app = tauri::Builder::default()
@@ -34,9 +34,5 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(|_app_handle, event| {
-        if let RunEvent::ExitRequested { api, .. } = event {
-            api.prevent_exit();
-        }
-    });
+    app.run(|_app_handle, _event| {});
 }
