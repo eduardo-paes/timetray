@@ -32,15 +32,15 @@ export function SidebarLeft(props: Props) {
         onNextMonth={props.onNextMonth}
       />
 
-      <div className="h-px bg-gray-800 flex-shrink-0" />
+      <div className="h-px bg-obs-400 flex-shrink-0" />
 
       <div className="flex items-center justify-between flex-shrink-0">
-        <span className="text-[10px] text-gray-500 uppercase tracking-widest font-medium">
+        <span className="text-[10px] text-steel-disabled uppercase tracking-widest font-medium">
           Tasks
         </span>
         <button
           onClick={props.onNewTask}
-          className="text-[11px] bg-blue-600 hover:bg-blue-500 text-white px-2 py-0.5 rounded transition-colors"
+          className="text-[11px] bg-copper hover:bg-copper-bright text-obs-950 font-medium px-2 py-0.5 rounded transition-colors"
         >
           + New
         </button>

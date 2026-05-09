@@ -18,16 +18,16 @@ export function SidebarRight({ summary, daySessions, tasks, selectedDate }: Prop
   return (
     <div className="flex flex-col h-full p-4 gap-4 overflow-hidden">
       <div className="flex-shrink-0">
-        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-medium mb-3">
+        <div className="text-[10px] text-steel-disabled uppercase tracking-widest font-medium mb-3">
           {isToday ? "Today's Summary" : selectedDate}
         </div>
         <DaySummary summary={summary} selectedDate={selectedDate} />
       </div>
 
-      <div className="h-px bg-gray-800 flex-shrink-0" />
+      <div className="h-px bg-obs-400 flex-shrink-0" />
 
       <div className="flex-shrink-0">
-        <div className="text-[10px] text-gray-500 uppercase tracking-widest font-medium mb-2">
+        <div className="text-[10px] text-steel-disabled uppercase tracking-widest font-medium mb-2">
           Sessions
         </div>
       </div>

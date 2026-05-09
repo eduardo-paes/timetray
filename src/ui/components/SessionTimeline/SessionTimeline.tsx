@@ -20,7 +20,7 @@ export function SessionTimeline({ sessions, tasks }: Props) {
   const liveElapsed = useTimer()
 
   if (sessions.length === 0) {
-    return <p className="text-gray-500 text-xs text-center py-4">No sessions</p>
+    return <p className="text-steel-muted text-xs text-center py-4">No sessions</p>
   }
 
   return (
@@ -33,26 +33,28 @@ export function SessionTimeline({ sessions, tasks }: Props) {
         return (
           <div
             key={session.id}
-            className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs ${
-              isActive ? 'bg-blue-900/30 border border-blue-800/40' : 'bg-gray-800/40'
+            className={`flex items-center gap-2 px-2.5 py-2 rounded-[8px] text-xs transition-colors ${
+              isActive
+                ? 'bg-copper/[0.08] border border-copper/30'
+                : 'bg-obs-800/50 hover:bg-obs-800'
             }`}
           >
             <span
               className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: task?.color ?? '#6b7280' }}
+              style={{ backgroundColor: task?.color ?? '#7B8794' }}
             />
             <div className="flex-1 min-w-0">
-              <div className="text-gray-300 truncate font-medium">{task?.name ?? 'Unknown'}</div>
-              <div className="text-gray-500 text-[10px]">
+              <div className="text-steel-secondary truncate font-medium">{task?.name ?? 'Unknown'}</div>
+              <div className="text-steel-disabled text-[10px]">
                 {formatTime(session.startedAt)}
                 {session.endedAt ? ` – ${formatTime(session.endedAt)}` : ' – now'}
               </div>
             </div>
-            <span className="text-gray-400 font-mono tabular-nums text-[11px] flex-shrink-0">
+            <span className="text-steel-muted font-mono tabular-nums text-[11px] flex-shrink-0">
               {formatDuration(secs)}
             </span>
             {isActive && (
-              <span className="text-blue-400 text-[9px] animate-pulse flex-shrink-0">●</span>
+              <span className="text-copper text-[9px] animate-pulse flex-shrink-0">●</span>
             )}
           </div>
         )

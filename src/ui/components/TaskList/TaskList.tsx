@@ -48,29 +48,29 @@ function TaskListItem({
   return (
     <li
       className={`
-        group flex items-center gap-2 px-3 py-2 rounded-lg
+        group flex items-center gap-2 px-3 py-2 rounded-[10px]
         transition-colors select-none
         ${
           task.enabled
             ? isActive
-              ? 'bg-blue-600/20 border border-blue-500/30 text-blue-300 cursor-default'
-              : 'hover:bg-gray-800 text-gray-300 border border-transparent cursor-pointer'
-            : 'opacity-40 text-gray-500 border border-transparent cursor-not-allowed'
+              ? 'bg-copper/10 border border-obs-500/40 border-l-2 border-l-copper text-steel-primary cursor-default'
+              : 'hover:bg-obs-800 text-steel-secondary hover:text-steel-primary border border-transparent cursor-pointer'
+            : 'opacity-30 text-steel-disabled border border-transparent cursor-not-allowed'
         }
       `}
       onClick={() => task.enabled && !isActive && onSwitch()}
     >
       <span
         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-        style={{ backgroundColor: task.color ?? '#6b7280' }}
+        style={{ backgroundColor: task.color ?? '#7B8794' }}
       />
       <span className="flex-1 text-sm font-medium truncate">{task.name}</span>
 
-      {isActive && <span className="text-[10px] text-blue-400 font-mono animate-pulse">▶</span>}
+      {isActive && <span className="text-[10px] text-copper font-mono animate-pulse">▶</span>}
 
       <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          className="text-gray-500 hover:text-gray-300 px-1 py-0.5 rounded text-xs"
+          className="text-steel-disabled hover:text-steel-secondary px-1 py-0.5 rounded text-xs"
           onClick={(e) => {
             e.stopPropagation()
             setShowMenu((v) => !v)
@@ -80,11 +80,11 @@ function TaskListItem({
         </button>
         {showMenu && (
           <div
-            className="absolute right-0 top-6 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 py-1 min-w-[130px]"
+            className="absolute right-0 top-6 bg-obs-800 border border-obs-500 rounded-[10px] shadow-2xl z-50 py-1 min-w-[130px]"
             onMouseLeave={() => setShowMenu(false)}
           >
             <button
-              className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700"
+              className="w-full text-left px-3 py-1.5 text-xs text-steel-secondary hover:bg-obs-700 hover:text-steel-primary"
               onClick={(e) => {
                 e.stopPropagation()
                 setShowMenu(false)
@@ -94,7 +94,7 @@ function TaskListItem({
               Edit
             </button>
             <button
-              className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-700"
+              className="w-full text-left px-3 py-1.5 text-xs text-steel-secondary hover:bg-obs-700 hover:text-steel-primary"
               onClick={(e) => {
                 e.stopPropagation()
                 setShowMenu(false)
@@ -105,7 +105,7 @@ function TaskListItem({
             </button>
             {!isActive && (
               <button
-                className="w-full text-left px-3 py-1.5 text-xs text-red-400 hover:bg-gray-700"
+                className="w-full text-left px-3 py-1.5 text-xs text-[#C75A52] hover:bg-obs-700"
                 onClick={(e) => {
                   e.stopPropagation()
                   setShowMenu(false)
