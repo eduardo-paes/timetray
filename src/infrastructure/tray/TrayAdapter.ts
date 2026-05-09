@@ -1,15 +1,85 @@
 import { TrayIcon } from '@tauri-apps/api/tray'
-import { Menu, MenuItem, PredefinedMenuItem } from '@tauri-apps/api/menu'
+import { Menu, IconMenuItem, PredefinedMenuItem } from '@tauri-apps/api/menu'
+import { exit } from '@tauri-apps/plugin-process'
 import { Task } from '../../domain/task/Task'
 import { WorkSession, elapsedSeconds } from '../../domain/session/WorkSession'
 import { formatDurationShort } from '../../shared/utils'
+
+// --- Icon helpers: canvas → PNG Uint8Array ---
+
+const _colorIconCache = new Map<string, Uint8Array>()
+
+function pngBytes(draw: (ctx: CanvasRenderingContext2D, s: number) => void, size = 14): Uint8Array {
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  draw(canvas.getContext('2d')!, size)
+  const b64 = canvas.toDataURL('image/png').split(',')[1]
+  const bin = atob(b64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+
+function colorDotIcon(color: string | null): Uint8Array {
+  const c = color ?? '#6b7280'
+  if (!_colorIconCache.has(c)) {
+    _colorIconCache.set(c, pngBytes((ctx, s) => {
+      ctx.beginPath()
+      ctx.arc(s / 2, s / 2, s / 2 - 1, 0, Math.PI * 2)
+      ctx.fillStyle = c
+      ctx.fill()
+    }))
+  }
+  return _colorIconCache.get(c)!
+}
+
+let _stopIcon: Uint8Array | undefined
+function stopIcon(): Uint8Array {
+  return (_stopIcon ??= pngBytes((ctx, s) => {
+    const p = 3
+    ctx.fillStyle = 'rgba(255,255,255,0.65)'
+    ctx.fillRect(p, p, s - 2 * p, s - 2 * p)
+  }))
+}
+
+let _dashIcon: Uint8Array | undefined
+function dashboardIcon(): Uint8Array {
+  return (_dashIcon ??= pngBytes((ctx, s) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'
+    const pad = 2, gap = 1, cell = Math.floor((s - 2 * pad - gap) / 2)
+    ctx.fillRect(pad, pad, cell, cell)
+    ctx.fillRect(pad + cell + gap, pad, cell, cell)
+    ctx.fillRect(pad, pad + cell + gap, cell, cell)
+    ctx.fillRect(pad + cell + gap, pad + cell + gap, cell, cell)
+  }))
+}
+
+let _exitIcon: Uint8Array | undefined
+function exitIcon(): Uint8Array {
+  return (_exitIcon ??= pngBytes((ctx, s) => {
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)'
+    ctx.lineWidth = 1.5
+    ctx.lineCap = 'round'
+    const cx = s / 2, r = s / 2 - 2
+    ctx.beginPath()
+    ctx.arc(cx, cx, r, 0.65, Math.PI * 2 - 0.65)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(cx, 1)
+    ctx.lineTo(cx, cx)
+    ctx.stroke()
+  }))
+}
+
+// --- TrayAdapter ---
 
 export class TrayAdapter {
   private tray: TrayIcon | null = null
   private refreshInterval: ReturnType<typeof setInterval> | null = null
 
-  private taskItems = new Map<string, MenuItem>()
-  private stopItem: MenuItem | null = null
+  private taskItems = new Map<string, IconMenuItem>()
+  private stopItem: IconMenuItem | null = null
   private builtTaskIds: string[] = []
 
   private onTaskClick?: (taskId: string) => void | Promise<void>
@@ -54,9 +124,7 @@ export class TrayAdapter {
     if (activeSession) {
       const activeTask = tasks.find((t) => t.id === activeSession.taskId)
       const elapsed = elapsedSeconds(activeSession)
-      await tray.setTooltip(
-        `TimeTray — ${activeTask?.name ?? 'Tracking'} ${formatDurationShort(elapsed)}`,
-      )
+      await tray.setTooltip(`TimeTray — ${activeTask?.name ?? 'Tracking'} ${formatDurationShort(elapsed)}`)
     } else {
       await tray.setTooltip('TimeTray — No active task')
     }
@@ -65,25 +133,27 @@ export class TrayAdapter {
   // Full rebuild: recreates the native menu. Only when task list changes.
   private async fullRebuild(tasks: Task[], activeSession: WorkSession | null): Promise<void> {
     this.taskItems.clear()
-    const taskMenuItems: MenuItem[] = []
+    const taskMenuItems: IconMenuItem[] = []
 
     for (const task of tasks) {
       const isActive = activeSession?.taskId === task.id
       const taskId = task.id
-      const item = await MenuItem.new({
+      const item = await IconMenuItem.new({
         id: `task:${taskId}`,
         text: this.taskLabel(task, isActive, activeSession),
         enabled: !isActive,
+        icon: colorDotIcon(task.color),
         action: () => { void this.onTaskClick?.(taskId) },
       })
       this.taskItems.set(task.id, item)
       taskMenuItems.push(item)
     }
 
-    this.stopItem = await MenuItem.new({
+    this.stopItem = await IconMenuItem.new({
       id: 'tray:stop',
       text: activeSession ? 'Stop Tracking' : 'No Active Task',
       enabled: !!activeSession,
+      icon: stopIcon(),
       action: () => { void this.onStop?.() },
     })
 
@@ -93,8 +163,17 @@ export class TrayAdapter {
         await PredefinedMenuItem.new({ item: 'Separator' }),
         this.stopItem,
         await PredefinedMenuItem.new({ item: 'Separator' }),
-        await MenuItem.new({ id: 'tray:show', text: 'Open Dashboard' }),
-        await PredefinedMenuItem.new({ item: 'Quit' }),
+        await IconMenuItem.new({
+          id: 'tray:show',
+          text: 'Open Dashboard',
+          icon: dashboardIcon(),
+        }),
+        await IconMenuItem.new({
+          id: 'tray:exit',
+          text: 'Exit',
+          icon: exitIcon(),
+          action: () => { void exit(0) },
+        }),
       ],
     })
 

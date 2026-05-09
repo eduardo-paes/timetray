@@ -6,6 +6,7 @@ use tauri::{tray::TrayIconBuilder, Manager, RunEvent, WindowEvent};
 fn main() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_sql::Builder::default().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             TrayIconBuilder::with_id("timetray-main")
                 .icon(app.default_window_icon().unwrap().clone())
