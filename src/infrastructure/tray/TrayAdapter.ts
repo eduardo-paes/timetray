@@ -128,7 +128,7 @@ export class TrayAdapter {
   async init(): Promise<void> {
     try {
       this.tray = await TrayIcon.getById('timetray-main')
-      await this.tray.setIcon(appTrayIcon())
+      await this.tray?.setIcon(appTrayIcon())
     } catch {
       // will retry on first rebuild
     }

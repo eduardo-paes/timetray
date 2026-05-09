@@ -1,14 +1,28 @@
 # TimeTray
 
-Zero-friction time tracker for software engineers. Lives in the system tray — one click to switch tasks, every session persisted to SQLite.
+Zero-friction time tracker for software engineers. Lives in the system tray - one click to switch tasks, every session persisted locally in SQLite.
 
 ## Features
 
-- **System tray**: always accessible, never in the way
-- **1-click task switching**: atomic session handoff with no gaps
-- **Automatic crash recovery**: open sessions are closed on restart
-- **Dashboard**: calendar, per-day history, task management
-- **Fully offline**: SQLite, no external services
+- **System tray** - always accessible, never in the way
+- **1-click task switching** - atomic session handoff with no gaps or overlaps
+- **Daily overview** - bar chart breakdown of time per task for any selected day
+- **Session history** - full log with start/end times, browsable by calendar
+- **Automatic crash recovery** - open sessions are closed cleanly on next startup
+- **Fully offline** - SQLite, no accounts, no cloud, no telemetry
+
+## Installation
+
+Download the latest release:
+
+| Platform              | Installer                          |
+|-----------------------|------------------------------------|
+| Windows (recommended) | `TimeTray_0.1.0_x64-setup.exe`     |
+| Windows (MSI)         | `TimeTray_0.1.0_x64_en-US.msi`     |
+
+Installs per-user by default - no administrator rights required.
+
+**Data location:** `%APPDATA%\com.timetray.app\timetray.db`
 
 ## Stack
 
@@ -17,11 +31,12 @@ Zero-friction time tracker for software engineers. Lives in the system tray — 
 | Desktop shell | Tauri v2 (Rust + WebView2) |
 | UI | React 19 + TypeScript |
 | State | Zustand |
-| Database | SQLite via `@tauri-apps/plugin-sql` |
-| Styling | TailwindCSS v3 |
+| Database | SQLite via `tauri-plugin-sql` |
+| Styling | Tailwind CSS - *Obsidian + Copper* design system |
+| Fonts | Inter (UI) · JetBrains Mono (timers) |
 | Bundler | Vite |
 
-## Getting started
+## Development
 
 ### Prerequisites
 
@@ -43,7 +58,7 @@ npm install
 npm run tauri dev
 ```
 
-The tray icon appears in the system tray. Click it to open the dashboard. Close the window to hide it — the app keeps running in the tray.
+The tray icon appears in the system tray. Click it to open the dashboard. Closing the window hides it - the app keeps running in the tray.
 
 ### Build
 
@@ -51,63 +66,62 @@ The tray icon appears in the system tray. Click it to open the dashboard. Close 
 npm run tauri build
 ```
 
-Produces a signed installer under `src-tauri/target/release/bundle/`.
+Produces installers under `src-tauri/target/release/bundle/nsis/` and `bundle/msi/`.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server only |
-| `npm run tauri dev` | Start full app (Vite + Rust) |
-| `npm run tauri build` | Build production installer |
-| `npm run lint` | Run ESLint |
-| `npm run lint:fix` | Auto-fix lint errors |
-| `npm run format` | Format with Prettier |
-| `npm run format:check` | Check formatting without writing |
+| Command               | Description                    |
+|-----------------------|--------------------------------|
+| `npm run dev`         | Start Vite dev server only     |
+| `npm run tauri dev`   | Start full app (Vite + Rust)   |
+| `npm run tauri build` | Build production installers    |
+| `npm run lint`        | Run ESLint                     |
+| `npm run lint:fix`    | Auto-fix lint errors           |
+| `npm run format`      | Format with Prettier           |
 
 ## Project structure
 
 ```
 src/
 ├── app/
-│   ├── App.tsx                  # Root component
-│   ├── bootstrap/init.ts        # DB init + crash recovery
+│   ├── App.tsx                   # Root component
+│   ├── bootstrap/init.ts         # DB init + crash recovery
 │   ├── providers/AppProvider.tsx # Service wiring + tray startup
-│   └── store/appStore.ts        # Zustand store
+│   └── store/appStore.ts         # Zustand global store
 ├── application/services/
-│   ├── HistoryService.ts        # Day summaries, calendar data
-│   ├── SessionService.ts        # switchToTask, stopTracking, recovery
+│   ├── HistoryService.ts         # Day summaries, calendar data
+│   ├── SessionService.ts         # switchToTask, stopTracking, recovery
 │   └── TaskService.ts
-├── domain/                      # Pure domain types (no I/O)
+├── domain/                       # Pure domain types (no I/O)
 │   ├── calendar/CalendarDay.ts
 │   ├── session/WorkSession.ts
 │   ├── summary/DaySummary.ts
 │   └── task/Task.ts
 ├── infrastructure/
-│   ├── db/database.ts           # SQLite singleton + migrations
-│   ├── persistence/             # TaskRepository, SessionRepository
-│   └── tray/TrayAdapter.ts      # Tray menu rebuild loop (1s interval)
-├── shared/utils.ts              # formatDuration, nowIso, generateId
+│   ├── db/database.ts            # SQLite singleton + migrations
+│   ├── persistence/              # TaskRepository, SessionRepository
+│   └── tray/TrayAdapter.ts       # Tray icon + menu rebuild loop
+├── shared/utils.ts               # formatDuration, nowIso, generateId
 └── ui/
-    ├── components/              # Calendar, DaySummary, SessionTimeline, TaskList, TaskForm
-    ├── hooks/                   # useTimer, useTrayRefresh
-    └── windows/Dashboard/       # DashboardLayout, SidebarLeft, SidebarRight
+    ├── components/               # Calendar, DayOverview, DaySummary,
+    │                             #   SessionTimeline, TaskForm, TaskList
+    ├── hooks/                    # useTimer
+    └── windows/Dashboard/        # DashboardLayout, SidebarLeft, SidebarRight
 src-tauri/
-├── src/main.rs                  # Tray icon, hide-on-close, prevent-exit
-├── capabilities/default.json    # Tauri v2 permissions
+├── src/main.rs                   # Tray init, hide-on-close
+├── capabilities/default.json     # Tauri v2 permission allowlist
 └── tauri.conf.json
 ```
 
 ## Key design decisions
 
-- **All DB logic in TypeScript** — `plugin-sql` talks to SQLite directly; no custom Rust commands.
-- **Atomic session switch** — `BEGIN IMMEDIATE` / `COMMIT` wraps end-old + start-new so there's never a gap.
-- **Tray menu rebuilt every second** — native menu objects can't be mutated; `TrayAdapter` recreates them on a 1 s interval.
-- **Window hides on close** — `CloseRequested` is intercepted in Rust; JS runtime stays alive for tray updates.
+- **All DB logic in TypeScript** - `plugin-sql` talks to SQLite directly; no custom Rust commands needed.
+- **Atomic session switch** - `BEGIN IMMEDIATE` / `COMMIT` wraps end-old + start-new so there is never a gap.
+- **Light vs full tray rebuild** - label/enabled updates happen in-place every second; the full `setMenu()` call only runs when the task list changes, so an open tray menu is never dismissed mid-read.
+- **Window hides on close** - `CloseRequested` is intercepted in Rust so the JS runtime stays alive for tray updates.
+- **Canvas-generated tray icon** - the tray icon is drawn at runtime via HTML Canvas, bypassing OS icon cache on startup.
 
 ## IDE setup
-
-Install these VS Code extensions for the best experience:
 
 - [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode)
 - [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)

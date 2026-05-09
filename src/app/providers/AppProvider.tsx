@@ -78,9 +78,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   if (!services) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-950 text-gray-400">
+      <div className="flex items-center justify-center h-screen bg-obs-950 text-steel-muted">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-copper border-t-transparent rounded-full animate-spin" />
           <span className="text-sm font-mono">Starting TimeTray…</span>
         </div>
       </div>

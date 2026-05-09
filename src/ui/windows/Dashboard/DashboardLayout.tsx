@@ -198,7 +198,7 @@ export function DashboardLayout() {
             })}
         </div>
 
-        <DayOverview summary={store.daySummary} selectedDate={store.selectedDate} />
+        <DayOverview summary={store.daySummary} />
       </main>
 
       {/* Right sidebar */}

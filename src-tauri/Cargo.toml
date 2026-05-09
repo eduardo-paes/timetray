@@ -1,8 +1,8 @@
 [package]
 name = "timetray"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Minimal system tray time tracker for engineers"
+authors = ["Eduardo Paes"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

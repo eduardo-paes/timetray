@@ -35,8 +35,20 @@
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
+      "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "copyright": "© 2026 Eduardo Paes",
+    "category": "Productivity",
+    "shortDescription": "Minimal system tray time tracker for engineers",
+    "longDescription": "TimeTray is a precision desktop time tracking utility that lives in the system tray. Switch tasks instantly, review daily summaries, and stay focused — no accounts, no cloud, no noise.",
+    "windows": {
+      "nsis": {
+        "languages": ["English"],
+        "displayLanguageSelector": false,
+        "installMode": "currentUser"
+      }
+    }
   },
   "plugins": {
     "sql": {
